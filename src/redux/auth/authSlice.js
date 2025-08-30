@@ -1,5 +1,9 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+} from "firebase/auth";
 import { auth } from "../../Firebase/firebaseConfig";
 
 export const createAccountThunk = createAsyncThunk(
@@ -23,6 +27,25 @@ export const createAccountThunk = createAsyncThunk(
     };
   }
 );
+
+export const loginWithEmailAndPassworThunk = createAsyncThunk(
+  "auth/login",
+  async ({ email, password }) => {
+    const { user } = await signInWithEmailAndPassword(auth, email, password);
+    return {
+      id: user.uid,
+      displayName: user.displayName,
+      email: email,
+      accessToken: user.accessToken,
+      photoURL: user.photoURL,
+    };
+  }
+);
+
+export const logoutThunk = createAsyncThunk("auth/logout", async () => {
+  await signOut(auth);
+  return null;
+});
 
 const authSlice = createSlice({
   name: "auth",
@@ -52,6 +75,29 @@ const authSlice = createSlice({
       .addCase(createAccountThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
+      })
+      .addCase(loginWithEmailAndPassworThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(loginWithEmailAndPassworThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload;
+        state.error = null;
+      })
+      .addCase(loginWithEmailAndPassworThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      })
+      .addCase(logoutThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = false;
+        state.user = action.payload;
+        state.error = null;
+      })
+      .addCase(logoutThunk.rejected, (state, action) => {
+        (state.loading = false), (state.error = action.error.message);
       });
   },
 });
