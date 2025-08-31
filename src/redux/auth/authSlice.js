@@ -1,7 +1,10 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import {
   createUserWithEmailAndPassword,
+  GoogleAuthProvider,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
   updateProfile,
 } from "firebase/auth";
 import { auth } from "../../Firebase/firebaseConfig";
@@ -46,6 +49,21 @@ export const logoutThunk = createAsyncThunk("auth/logout", async () => {
   await signOut(auth);
   return null;
 });
+
+export const googleLoginThunk = createAsyncThunk(
+  "auth/googleLogin",
+  async () => {
+    const googleProvider = new GoogleAuthProvider();
+    const { user } = await signInWithPopup(auth, googleProvider);
+    return {
+      id: user.uid,
+      displayName: user.displayName,
+      accessToken: user.accessToken,
+      photoURL: user.photoURL,
+      email: user.email,
+    };
+  }
+);
 
 const authSlice = createSlice({
   name: "auth",
@@ -98,6 +116,20 @@ const authSlice = createSlice({
       })
       .addCase(logoutThunk.rejected, (state, action) => {
         (state.loading = false), (state.error = action.error.message);
+      })
+      .addCase(googleLoginThunk.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(googleLoginThunk.fulfilled, (state, action) => {
+        state.loading = false;
+        state.isAuthenticated = true;
+        state.user = action.payload;
+        state.error = null;
+      })
+      .addCase(googleLoginThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
       });
   },
 });

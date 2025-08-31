@@ -2,7 +2,7 @@ import { ErrorMessage, Field, Form, Formik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import * as Yup from "yup";
-import { loginWithEmailAndPassworThunk } from "../../redux/auth/authSlice";
+import { clearError, googleLoginThunk, loginWithEmailAndPassworThunk } from "../../redux/auth/authSlice";
 import Swal from "sweetalert2";
 
 const validationSchema = Yup.object().shape({
@@ -16,6 +16,10 @@ const Login = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { error, isAuthenticated, user } = useSelector((store) => store.auth);
+
+  const handleGoogleLogin = () => {
+    dispatch(googleLoginThunk())
+  }
 
   if (error) {
     Swal.fire({
@@ -80,7 +84,7 @@ const Login = () => {
       <section>
         <span>o, también puedes iniciar sesión con:</span>
         <div>
-          <button>Iniciar sesión con google</button>
+          <button onClick={handleGoogleLogin}>Iniciar sesión con google</button>
           <button>Iniciar sesión con teléfono</button>
         </div>
       </section>
